@@ -50,9 +50,10 @@ sudo memtracker -d -o log port build qt6-qtwebengine
 
 ## Compatibility
 
-**memtracker** is intended to be compatible with all versions of macOS that have
-`/usr/bin/footprint`, the program used to collect the memory usage information.
-If `footprint` is not found, the process is run without tracking.
+**memtracker** is intended to be compatible with macOS 10.9 and later. Earlier
+versions do not have `/usr/bin/footprint`, the program used to collect the
+memory usage information. If `footprint` is not found, the process is run
+without tracking.
 
 ## License
 
