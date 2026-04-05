@@ -23,18 +23,20 @@ with `sudo`.
 
 ## Options
 
-* **-d**, **--debug**:
-  Write new top load average and memory usage to stderr.
-* **-i** *interval*, **--interval** *interval*:
-  Sample the load average and memory usage every *interval* seconds. Defaults to
-  5.
-* **-n** *numprocs*, **--numprocs** *numprocs*:
-  Record memory usage of the largest *numprocs* processes. Defaults to the
-  number of active CPU cores.
-* **-o** *outfile*, **--outfile** *outfile*:
-  Write output to file *outfile* instead of stdout.
-* **command** **[args]**:
-  The command that will be run.
+<dl>
+<dt>-d, --debug:</dt>
+<dd>Write new top load average and memory usage to stderr.</dd>
+<dt>-i interval, --interval interval:</dt>
+<dd>Sample the load average and memory usage every interval seconds. Defaults to
+5.</dd>
+<dt>-n numprocs, --numprocs numprocs:</dt>
+<dd>Record memory usage of the largest numprocs processes. Defaults to the
+number of active CPU cores.</dd>
+<dt>-o outfile, --outfile outfile:</dt>
+<dd>Write output to file outfile instead of stdout.</dd>
+<dt>command [args]:</dt>
+<dd>The command that will be run.</dd>
+</dl>
 
 ## Examples
 
