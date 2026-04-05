@@ -5,17 +5,19 @@ SPDX-License-Identifier: MIT
 
 # memtracker
 
+## Synopsis
+
+```
+memtracker [-d] [-i interval] [-n numprocs] [-o outfile] [--] command [args]
+```
+
+## Description
+
 **memtracker** monitors the memory usage of a process and all of its child
 processes. It periodically logs the number of elapsed seconds, the load average
 over the past minute, and the memory usage in mebibytes of the largest
 processes. At the end, it shows the elapsed seconds, the largest load average,
 and the largest process over the course of the parent process's execution.
-
-## Usage
-
-```
-usage: memtracker [-d] [-i interval] [-n numprocs] [-o outfile] [--] command [args]
-```
 
 **memtracker** cannot inspect the memory usage of processes owned by other
 users. If you want to track a process started with `sudo`, start **memtracker**
