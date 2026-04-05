@@ -1,0 +1,181 @@
+#!/bin/bash
+
+# SPDX-FileCopyrightText: © 2026 Ryan Carsten Schmidt <https://github.com/ryandesign>
+# SPDX-License-Identifier: MIT
+
+set -u -o notify
+
+debug=0
+interval=5
+linelength=80
+maxloadavg=0
+maxmem=0
+maxproc=
+status=0
+footprint=/usr/bin/footprint
+progname=$(basename "$0")
+
+# usage: print the usage message
+usage() {
+    printf 'usage: %s [-d] [-i interval] [-n numprocs] [-o outfile] [--] command [args]\n' "$progname"
+    exit 1
+}
+
+# err: print an error message to stderr and exit
+# $1: the error message
+# $2: the exit code (defaults to 1)
+err() {
+    printf '%s: error: %s\n' "$progname" "${1-}" 1>&2
+    exit "${2-1}"
+}
+
+# warn: print a warning message to stderr
+warn() {
+    printf '%s: warning: %s\n' "$progname" "${1-}" 1>&2
+}
+
+# out: output stdin to stdout or $outfile
+out() {
+    if [[ -n ${outfile-} ]]; then
+        cat >> "$outfile"
+    else
+        cat
+    fi
+}
+
+# outf: output a formatted string as with printf to stdout or $outfile
+# $@: as with printf
+outf() {
+    # shellcheck disable=SC2059
+    printf "$@" | out
+}
+
+# outline: output a character a number of times, followed by a newline
+# $1: the number of characters to print (defaults to $linelength)
+# $2: the character (defaults to "-")
+outline() {
+    outf '%s\n' "$(head -c "${1-$linelength}" < /dev/zero | tr '\0' "${2--}")"
+}
+
+# Process command line args.
+while (( $# > 0 )); do
+    case "$1" in
+        -d|--debug)
+            debug=1
+            shift
+            ;;
+        -i|--interval)
+            (( $# >= 2 )) || usage
+            interval="$2"
+            shift 2
+            ;;
+        -n|--numprocs)
+            (( $# >= 2 )) || usage
+            numprocs="$2"
+            shift 2
+            ;;
+        -o|--output)
+            (( $# >= 2 )) || usage
+            outfile="$2"
+            [[ -f $outfile ]] && rm -f "$outfile"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            err "unknown option: $1"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+(( $# == 0 )) && usage
+
+outf '%s\n' "$*"
+[[ -f "${outfile-}" ]] || linelength=$(tput cols)
+outline
+
+# Set a default for numprocs.
+if (( ${numprocs-0} == 0 )); then
+    numprocs=$(nproc 2>/dev/null) \
+        || numprocs=$(sysctl -n hw.activecpu 2>/dev/null) || numprocs=1
+fi
+
+if [[ ! -x $footprint ]]; then
+    warn "file not found: $footprint"
+    exec "$@"
+fi
+
+cleanup() {
+    outline
+    outf 'Max load average: %s\nMax process memory usage in MiB: %s\nProcess with highest memory usage: %s\n' "$maxloadavg" "$maxmem" "$maxproc"
+    exit "$status"
+}
+
+trap cleanup SIGUSR1
+
+{
+    "$@"
+    status="$?"
+    kill -USR1 "$$"
+#    sleep 1
+} &
+pid=$!
+
+i=0
+while sleep "$i"; do
+    i="$interval"
+
+    # Get the load average.
+    loadavg=$(uptime | awk '{print $(NF-2)}')
+    [[ -n $loadavg ]] || err "can't get load average"
+
+    outf '%d %s' "$SECONDS" "$loadavg"
+
+    # Get memory usage for the top $numprocs processes. $footprint outputs this
+    # in descending order.
+    while IFS= read -r line; do
+        mem="${line%% *}"
+        line="${line#* }"
+        units="${line%% *}"
+
+        # Normalize $mem to be in integer megabytes.
+        case "$units" in
+            GB|gB)
+                mem=$((mem * 1024))
+                ;;
+            KB|kB)
+                mem=$((mem / 1024))
+                ;;
+        esac
+        outf ' %d' "$mem"
+
+        # Keep track of maximum process memory usage.
+        if (( $(bc <<< "$mem > $maxmem") )); then
+            maxproc="${line#* }"
+            maxmem="$mem"
+            (( debug )) && printf 'New top memory usage: %d (%s)\n' "$maxmem" "$maxproc" 1>&2
+        fi
+    done < <(
+        # Avoid "--format bytes" and other double-dash args (e.g. "--pid")
+        # which did not exist in the earliest versions of footprint.
+        "$footprint" -pid "$pid" -targetChildren 2>/dev/null \
+            | sed -En '/\tFootprint: /s/^[[:space:]]*(.*) \[[0-9]+\]: [0-9]+-bit\tFootprint: ([0-9.]+) ([^[:space:]]+).*$/\2 \3 \1/p' \
+            | head -n"$numprocs"
+        printf %d "${PIPESTATUS[0]}"
+    )
+    outf '\n'
+
+    # After the while loop is done, $line contains the exit status of $footprint.
+    (( line == 0 )) || err "can't get memory usage" "$line"
+
+    # Keep track of maximum load average.
+    if (( $(bc <<< "$loadavg > $maxloadavg") )); then
+        maxloadavg="$loadavg"
+        (( debug )) && printf 'New top load average: %s\n' "$maxloadavg" 1>&2
+    fi
+done
