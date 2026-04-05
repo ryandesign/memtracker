@@ -22,7 +22,7 @@ usage() {
 }
 
 # err: print an error message to stderr and exit
-# $1: the error message
+# $1: the message
 # $2: the exit code (defaults to 1)
 err() {
     printf '%s: error: %s\n' "$progname" "${1-}" 1>&2
@@ -30,6 +30,7 @@ err() {
 }
 
 # warn: print a warning message to stderr
+# $1: the message
 warn() {
     printf '%s: warning: %s\n' "$progname" "${1-}" 1>&2
 }
