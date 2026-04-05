@@ -112,7 +112,7 @@ fi
 
 cleanup() {
     outline
-    outf 'Max load average: %s\nMax process memory usage in MiB: %s\nProcess with highest memory usage: %s\n' "$maxloadavg" "$maxmem" "$maxproc"
+    outf 'Elapsed time in seconds: %d\nHighest load average: %s\nHighest process memory usage in MiB: %s\nProcess with highest memory usage: %s\n' "$SECONDS" "$maxloadavg" "$maxmem" "$maxproc"
     exit "$status"
 }
 
