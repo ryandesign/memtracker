@@ -78,7 +78,6 @@ while (( $# > 0 )); do
         -o|--output)
             (( $# >= 2 )) || usage
             outfile="$2"
-            [[ -f $outfile ]] && rm -f "$outfile"
             shift 2
             ;;
         --)
@@ -96,8 +95,9 @@ done
 
 (( $# == 0 )) && usage
 
+[[ -f ${outfile-} ]] && rm -f "$outfile"
 outf '%s\n' "$*"
-[[ -f "${outfile-}" ]] || linelength=$(tput cols)
+[[ -f ${outfile-} ]] || linelength=$(tput cols)
 outline
 
 # Set a default for numprocs.
