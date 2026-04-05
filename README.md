@@ -27,13 +27,13 @@ with `sudo`.
 <dt>-d, --debug:</dt>
 <dd>Write new top load average and memory usage to stderr.</dd>
 <dt>-i interval, --interval interval:</dt>
-<dd>Sample the load average and memory usage every interval seconds. Defaults to
-5.</dd>
+<dd>Sample the load average and memory usage every <em>interval</em> seconds.
+Defaults to 5.</dd>
 <dt>-n numprocs, --numprocs numprocs:</dt>
-<dd>Record memory usage of the largest numprocs processes. Defaults to the
-number of active CPU cores.</dd>
+<dd>Record memory usage of the largest <em>numprocs</em> processes. Defaults to
+the number of active CPU cores.</dd>
 <dt>-o outfile, --outfile outfile:</dt>
-<dd>Write output to file outfile instead of stdout.</dd>
+<dd>Write output to file <em>outfile</em> instead of stdout.</dd>
 <dt>command [args]:</dt>
 <dd>The command that will be run.</dd>
 </dl>
